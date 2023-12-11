@@ -102,7 +102,39 @@ class PatientController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+       // dd($request->all());
+        $validator = Validator::make($request->all(), [
+            'document' => 'required|string|unique:patients,document',
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'birth_date' => 'required|date',
+            'email' => 'required|string|unique:patients,email',
+            'phone' => 'required|string',
+            'genre' => 'required|string|in:male,female',
+        ]);
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            $response = [
+                'status'  => false,
+                'message' => $errorMessage,
+            ];
+            return response()->json($response, 401);
+        }
+
+        $patient = Patient::find($id);
+        if (!$patient) {
+            return response()->json([
+                'message' => 'El paciente no existe.',
+            ], 409);
+        }
+
+        $patient->fill($request->all());
+        $patient->save();
+
+        return response()->json([
+            'patient' => $patient,
+        ], 201);
     }
 
     /**
