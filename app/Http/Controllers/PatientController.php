@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\PatientService;
-use App\Models\DiagnosticAssignment;
-use App\Models\Diagnostic;
 use Carbon\Carbon;
 use DB;
 
@@ -109,25 +107,10 @@ class PatientController extends Controller
     public function destroy($id)
     {
         try{
-            $patient = Patient::find($id);
+            $patientService = new PatientService();
+            $patient = $patientService->destroyPatient($id);
 
-            $assignments = $patient->assignments;
-            $diagnostics = $patient->diagnostics;
-
-            foreach ($assignments as $assignment) {
-                $assignment->delete();
-            }
-
-            foreach ($diagnostics as $diagnostic) {
-                $diagnostic = Diagnostic::find($diagnostic->id);
-                $diagnostic->delete();
-            }
-            
-            $patient->delete();
-
-            return response()->json([
-                'message' => 'Paciente eliminado correctamente',
-            ]);
+            return $patient;
 
         } catch (\Exception $e) {
             return response()->json([
@@ -136,32 +119,24 @@ class PatientController extends Controller
             
         }
 
-        
     }
 
     public function assignment(Request $request)
     {
-        $data = $request->all();
-        $validator = Validator::make($data, [
-            'diagnostic_id' => 'required|integer',
-            'patient_id' => 'required|integer',
-            'creation' => 'required|date',
-        ]);
+        try {
+            $data = $request->all();
 
-        if ($validator->fails()) {
-            $errorMessage = $validator->errors()->first();
-            $response = [
-                'status'  => false,
-                'message' => $errorMessage,
-            ];
-            return response()->json($response, 401);
+            $patientService = new PatientService();
+            $patient = $patientService->assignmentDiagnostic($data);
+
+            return $patient;
+
+        }catch (\Exception $e) {
+            return response()->json([
+                'message' =>  $e->getMessage(),
+            ],500);
         }
-
-        $diagnosticAssignment = DiagnosticAssignment::create($data);
-
-        return response()->json([
-            'diagnosticAssignment' => $diagnosticAssignment,
-        ], 201);
+        
     }
 
     public function getPatients()

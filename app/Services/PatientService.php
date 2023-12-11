@@ -5,6 +5,8 @@ namespace App\Services;
 
 use Illuminate\Http\Request;
 use App\Models\Patient;
+use App\Models\DiagnosticAssignment;
+use App\Models\Diagnostic;
 use Illuminate\Support\Facades\Validator;
 use DB;
 
@@ -52,8 +54,9 @@ class PatientService
             $GLOBALS['patient'] = $patient;
         
         });
-        
+
         return response()->json([
+            'message' => 'Paciente agregado correctamente',
             'patient' => $patient,
         ], 201);
     }
@@ -98,5 +101,62 @@ class PatientService
         ], 201);
     }
 
+    public function destroyPatient($id){
 
+        DB::transaction(function() use ($id){
+            $patient = Patient::find($id);
+
+            $assignments = $patient->assignments;
+            $diagnostics = $patient->diagnostics;
+
+            foreach ($assignments as $assignment) {
+                $assignment->delete();
+            }
+
+            foreach ($diagnostics as $diagnostic) {
+                $diagnostic = Diagnostic::find($diagnostic->id);
+                $diagnostic->delete();
+            }
+                
+            $patient->delete();
+        });
+
+        return response()->json([
+            'message' => 'Paciente eliminado correctamente',
+        ]);
+
+    }
+
+    public function assignmentDiagnostic(array $data){
+
+        $validator = Validator::make($data, [
+            'diagnostic_id' => 'required|integer',
+            'patient_id' => 'required|integer',
+            'creation' => 'required|date',
+        ]);
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            $response = [
+                'status'  => false,
+                'message' => $errorMessage,
+            ];
+            return response()->json($response, 401);
+        }
+        
+        global $diagnosticAssignment;
+
+        DB::transaction(function() use ($data){
+
+            $diagnosticAssignment = DiagnosticAssignment::create($data);
+            $GLOBALS['diagnosticAssignment'] = $diagnosticAssignment;
+
+        });
+
+        return response()->json([
+            'message' => 'Paciente asignado correctamente',
+            'diagnosticAssignment' => $diagnosticAssignment,
+        ], 201);
+
+    }
 }
