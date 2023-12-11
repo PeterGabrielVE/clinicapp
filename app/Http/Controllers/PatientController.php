@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Patient;
+use App\Models\DiagnosticAssignment;
 use Illuminate\Support\Facades\Validator;
 
 class PatientController extends Controller
@@ -38,7 +39,7 @@ class PatientController extends Controller
     {
         $data = $request->all();
 
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($data, [
             'document' => 'required|string|unique:patients,document',
             'first_name' => 'required|string',
             'last_name' => 'required|string',
@@ -146,5 +147,30 @@ class PatientController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function assignment(Request $request)
+    {
+        $data = $request->all();
+        $validator = Validator::make($data, [
+            'diagnostic_id' => 'required|integer',
+            'patient_id' => 'required|integer',
+            'creation' => 'required|date',
+        ]);
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            $response = [
+                'status'  => false,
+                'message' => $errorMessage,
+            ];
+            return response()->json($response, 401);
+        }
+
+        $diagnosticAssignment = DiagnosticAssignment::create($data);
+
+        return response()->json([
+            'diagnosticAssignment' => $diagnosticAssignment,
+        ], 201);
     }
 }

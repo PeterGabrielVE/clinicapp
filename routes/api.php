@@ -19,3 +19,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::resource('patient', PatientController::class);
+Route::resource('diagnostic', DiagnosticController::class);
+
+Route::post('assignment', 'PatientController@assignment');
