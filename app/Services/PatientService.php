@@ -46,7 +46,7 @@ class PatientService
         if ($exist) {
             return response()->json([
                 'message' => 'El paciente ya existe.',
-            ], 409);
+            ], 419);
         }
         global $patient;
 
@@ -87,7 +87,7 @@ class PatientService
         if (!$patient) {
             return response()->json([
                 'message' => 'El paciente no existe.',
-            ], 409);
+            ], 419);
         }
         DB::transaction(function() use ($data,$patient){
         $patient->fill($data);
