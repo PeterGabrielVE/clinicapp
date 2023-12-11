@@ -22,3 +22,6 @@ Route::resource('patient', PatientController::class);
 Route::resource('diagnostic', DiagnosticController::class);
 
 Route::post('assignment', 'PatientController@assignment');
+Route::get('getPatients', 'PatientController@getPatients');
+Route::get('searchPatients', 'PatientController@searchPatients');
+Route::get('getTopFiveDiagnostics', 'PatientController@getTopFiveDiagnostics');
