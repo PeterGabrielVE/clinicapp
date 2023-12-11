@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Patient;
+use App\Services\PatientService;
 use App\Models\DiagnosticAssignment;
 use App\Models\Diagnostic;
-use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use DB;
 
@@ -19,7 +18,6 @@ class PatientController extends Controller
      */
     public function index()
     {
-        dd('hola');
     }
 
     /**
@@ -40,39 +38,19 @@ class PatientController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();
+        try {
+            $data = $request->all();
 
-        $validator = Validator::make($data, [
-            'document' => 'required|string|unique:patients,document',
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'birth_date' => 'required|date',
-            'email' => 'required|string|unique:patients,email',
-            'phone' => 'required|string',
-            'genre' => 'required|string|in:male,female',
-        ]);
+            $patientService = new PatientService();
+            $patient = $patientService->storePatient($data);
 
-        if ($validator->fails()) {
-            $errorMessage = $validator->errors()->first();
-            $response = [
-                'status'  => false,
-                'message' => $errorMessage,
-            ];
-            return response()->json($response, 401);
-        }
+            return $patient;
 
-        $patient = Patient::where('document', $data['document'])->first();
-        if ($patient) {
+        }catch (\Exception $e) {
             return response()->json([
-                'message' => 'El paciente ya existe.',
-            ], 409);
+                'message' =>  $e->getMessage(),
+            ]);
         }
-
-        $patient = Patient::create($data);
-
-        return response()->json([
-            'patient' => $patient,
-        ], 201);
     }
 
     /**
@@ -106,39 +84,20 @@ class PatientController extends Controller
      */
     public function update(Request $request, $id)
     {
-       // dd($request->all());
-        $validator = Validator::make($request->all(), [
-            'document' => 'required|string|unique:patients,document',
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'birth_date' => 'required|date',
-            'email' => 'required|string|unique:patients,email',
-            'phone' => 'required|string',
-            'genre' => 'required|string|in:male,female',
-        ]);
+        try {
+            $data = $request->all();
 
-        if ($validator->fails()) {
-            $errorMessage = $validator->errors()->first();
-            $response = [
-                'status'  => false,
-                'message' => $errorMessage,
-            ];
-            return response()->json($response, 401);
-        }
+            $patientService = new PatientService();
+            $patient = $patientService->updatePatient($id,$data);
 
-        $patient = Patient::find($id);
-        if (!$patient) {
+            return $patient;
+
+        }catch (\Exception $e) {
             return response()->json([
-                'message' => 'El paciente no existe.',
-            ], 409);
+                'message' =>  $e->getMessage(),
+            ],500);
         }
 
-        $patient->fill($request->all());
-        $patient->save();
-
-        return response()->json([
-            'patient' => $patient,
-        ], 201);
     }
 
     /**
@@ -173,7 +132,7 @@ class PatientController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' =>  $e->getMessage(),
-            ]);
+            ],500);
             
         }
 
