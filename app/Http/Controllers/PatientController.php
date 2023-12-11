@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Patient;
 use App\Models\DiagnosticAssignment;
+use App\Models\Diagnostic;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use DB;
@@ -148,7 +149,35 @@ class PatientController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try{
+            $patient = Patient::find($id);
+
+            $assignments = $patient->assignments;
+            $diagnostics = $patient->diagnostics;
+
+            foreach ($assignments as $assignment) {
+                $assignment->delete();
+            }
+
+            foreach ($diagnostics as $diagnostic) {
+                $diagnostic = Diagnostic::find($diagnostic->id);
+                $diagnostic->delete();
+            }
+            
+            $patient->delete();
+
+            return response()->json([
+                'message' => 'Paciente eliminado correctamente',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' =>  $e->getMessage(),
+            ]);
+            
+        }
+
+        
     }
 
     public function assignment(Request $request)
